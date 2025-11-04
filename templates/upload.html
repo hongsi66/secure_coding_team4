@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>게시물 업로드 - Instagram Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #fafafa;
+    }
+
+    .header {
+      background-color: white;
+      border-bottom: 1px solid #dbdbdb;
+      padding: 10px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 300;
+      color: #262626;
+    }
+
+    .header-actions a {
+      color: #262626;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      margin-left: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .upload-container {
+      background-color: white;
+      border: 1px solid #dbdbdb;
+      border-radius: 3px;
+      padding: 40px;
+      text-align: center;
+      position: relative;
+    }
+
+    .upload-title {
+      font-size: 24px;
+      font-weight: 300;
+      margin-bottom: 30px;
+      color: #262626;
+    }
+
+    .file-input-wrapper {
+      margin-bottom: 20px;
+    }
+
+    .file-input-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0095f6;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .file-input-label:hover {
+      background-color: #0086e5;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .preview-image {
+      max-width: 100%;
+      max-height: 400px;
+      margin: 20px 0;
+      border-radius: 3px;
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #dbdbdb;
+      border-radius: 3px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #a8a8a8;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0086e5;
+    }
+
+    button:disabled {
+      background-color: #b2dffc;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ed4956;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: none;
+      font-size: 14px;
+    }
+
+    .success-alert {
+      background-color: #4caf50;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #0095f6;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Instagram</div>
+    <div class="header-actions">
+      <a href="/feed">피드로 돌아가기</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="upload-container">
+      <div class="alert" id="alertBox"></div>
+      <h2 class="upload-title">새 게시물 만들기</h2>
+      
+      <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        <div class="file-input-wrapper">
+          <label for="image" class="file-input-label">사진 선택</label>
+          <input type="file" id="image" name="image" accept="image/*" required>
+        </div>
+        
+        <img id="preview" class="preview-image" alt="미리보기">
+        
+        <textarea name="caption" placeholder="문구 입력..."></textarea>
+        
+        <button type="submit" id="uploadBtn">공유하기</button>
+      </form>
+      
+      <a href="/feed" class="back-link">취소</a>
+    </div>
+  </div>
+
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    const imageInput = document.getElementById('image');
+    const preview = document.getElementById('preview');
+    const alertBox = document.getElementById('alertBox');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    // 이미지 미리보기
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 폼 제출
+    uploadForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (!imageInput.files[0]) {
+        showAlert('이미지를 선택해주세요.', false);
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = '업로드 중...';
+
+      const formData = new FormData(uploadForm);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showAlert('게시물이 업로드되었습니다!', true);
+          setTimeout(() => {
+            window.location.href = '/feed';
+          }, 1000);
+        } else {
+          showAlert(data.message || '업로드 실패!', false);
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = '공유하기';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        showAlert('서버 오류가 발생했습니다.', false);
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '공유하기';
+      });
+    });
+
+    function showAlert(msg, isSuccess) {
+      alertBox.textContent = msg;
+      alertBox.className = 'alert ' + (isSuccess ? 'success-alert' : '');
+      alertBox.style.display = 'block';
+      setTimeout(() => {
+        alertBox.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
+

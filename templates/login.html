@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - Instagram Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-container {
+      background-color: white;
+      border: 1px solid #dbdbdb;
+      padding: 40px;
+      width: 350px;
+      text-align: center;
+      position: relative;
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 300;
+      margin-bottom: 30px;
+      color: #262626;
+    }
+
+    input[type=text], input[type=password] {
+      width: 100%;
+      padding: 9px 0 7px 8px;
+      margin: 5px 0;
+      background-color: #fafafa;
+      border: 1px solid #dbdbdb;
+      border-radius: 3px;
+      font-size: 14px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #a8a8a8;
+    }
+
+    button {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0086e5;
+    }
+
+    button:disabled {
+      background-color: #b2dffc;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ed4956;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: none;
+      font-size: 14px;
+    }
+
+    .signup-link {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dbdbdb;
+      font-size: 14px;
+      color: #262626;
+    }
+
+    .signup-link a {
+      color: #0095f6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="alert" id="alertBox">로그인 실패!</div>
+    <div class="logo">Instagram</div>
+    <form id="loginForm" method="POST">
+      <input type="text" name="username" placeholder="사용자명" required><br>
+      <input type="password" name="password" placeholder="비밀번호" required><br>
+      <button type="submit" id="loginBtn">로그인</button>
+    </form>
+    <div class="signup-link">
+      계정이 없으신가요? <a href="/signup">가입하기</a>
+    </div>
+  </div>
+
+  <script>
+    const alertBox = document.getElementById('alertBox');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      fetch('/login', {
+        method: 'POST',
+        body: new FormData(loginForm)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = '/feed';
+        } else {
+          alertBox.style.display = 'block';
+          alertBox.textContent = data.message || '로그인 실패!';
+          setTimeout(() => alertBox.style.display = 'none', 3000);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alertBox.style.display = 'block';
+        alertBox.textContent = '서버 오류가 발생했습니다.';
+        setTimeout(() => alertBox.style.display = 'none', 3000);
+      });
+    });
+  </script>
+</body>
+</html>
+

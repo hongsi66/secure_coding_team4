@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>피드 - Instagram Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #fafafa;
+    }
+
+    .header {
+      background-color: white;
+      border-bottom: 1px solid #dbdbdb;
+      padding: 10px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 300;
+      color: #262626;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .header-actions a {
+      color: #262626;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .header-actions .username {
+      color: #262626;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .post {
+      background-color: white;
+      border: 1px solid #dbdbdb;
+      border-radius: 3px;
+      margin-bottom: 20px;
+    }
+
+    .post-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #efefef;
+    }
+
+    .post-username {
+      font-weight: 600;
+      font-size: 14px;
+      color: #262626;
+      margin-left: 10px;
+    }
+
+    .post-image {
+      width: 100%;
+      display: block;
+    }
+
+    .post-content {
+      padding: 16px;
+    }
+
+    .post-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      font-size: 24px;
+      line-height: 1;
+      transition: transform 0.1s;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    .like-btn {
+      color: #262626;
+    }
+
+    .like-btn.liked {
+      color: #ed4956;
+    }
+
+    .comment-btn {
+      color: #262626;
+      font-size: 24px;
+    }
+
+    .like-count {
+      font-weight: 600;
+      font-size: 14px;
+      color: #262626;
+      margin-bottom: 8px;
+    }
+
+    .post-caption {
+      font-size: 14px;
+      color: #262626;
+      margin-top: 8px;
+      word-wrap: break-word;
+    }
+
+    .post-caption .username {
+      font-weight: 600;
+      margin-right: 5px;
+    }
+
+    .comments-section {
+      margin-top: 12px;
+      border-top: 1px solid #efefef;
+      padding-top: 12px;
+    }
+
+    .comment {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .comment .username {
+      font-weight: 600;
+      margin-right: 5px;
+      color: #262626;
+    }
+
+    .comment .content {
+      color: #262626;
+    }
+
+    .comment-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #efefef;
+    }
+
+    .comment-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #262626;
+      background: transparent;
+    }
+
+    .comment-submit {
+      background: none;
+      border: none;
+      color: #0095f6;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .comment-submit:disabled {
+      color: #b2dffc;
+      cursor: not-allowed;
+    }
+
+    .post-time {
+      font-size: 10px;
+      color: #8e8e8e;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8e8e8e;
+    }
+
+    .empty-state h2 {
+      margin-bottom: 10px;
+      color: #262626;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 8px 16px;
+      background-color: #0095f6;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .upload-btn:hover {
+      background-color: #0086e5;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Instagram</div>
+    <div class="header-actions">
+      <span class="username">{{ username }}</span>
+      <a href="/upload">업로드</a>
+      <a href="/logout">로그아웃</a>
+    </div>
+  </div>
+
+  <div class="container">
+    {% if posts %}
+      {% for post in posts %}
+      <div class="post">
+        <div class="post-header">
+          <div class="post-username">{{ post.username }}</div>
+        </div>
+        <img src="{{ url_for('uploaded_file', filename=post.image_path) }}" alt="Post image" class="post-image">
+        <div class="post-content">
+          <div class="post-actions">
+            <button class="action-btn like-btn {{ 'liked' if post.user_liked else '' }}" 
+                    data-post-id="{{ post.id }}" 
+                    onclick="toggleLike({{ post.id }})">
+              {{ '❤️' if post.user_liked else '🤍' }}
+            </button>
+            <button class="action-btn comment-btn" onclick="focusCommentInput({{ post.id }})">
+              💬
+            </button>
+          </div>
+          
+          {% if post.like_count > 0 %}
+          <div class="like-count">{{ post.like_count }}명이 좋아합니다</div>
+          {% endif %}
+          
+          <div class="post-caption">
+            <span class="username">{{ post.username }}</span>
+            {{ post.caption or '' }}
+          </div>
+          
+          <div class="comments-section" id="comments-{{ post.id }}">
+            {% for comment in post.comments %}
+            <div class="comment">
+              <span class="username">{{ comment.username }}</span>
+              <span class="content">{{ comment.content }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <form class="comment-form" onsubmit="addComment(event, {{ post.id }})">
+            <input type="text" 
+                   class="comment-input" 
+                   placeholder="댓글 달기..." 
+                   id="comment-input-{{ post.id }}"
+                   required>
+            <button type="submit" class="comment-submit">게시</button>
+          </form>
+          
+          <div class="post-time">{{ post.created_at }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <h2>아직 게시물이 없습니다</h2>
+        <p>첫 번째 게시물을 업로드해보세요!</p>
+        <a href="/upload" class="upload-btn">게시물 업로드</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    async function toggleLike(postId) {
+      const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+      const likeCountEl = likeBtn.closest('.post-content').querySelector('.like-count');
+      const isLiked = likeBtn.classList.contains('liked');
+      
+      try {
+        const method = isLiked ? 'DELETE' : 'POST';
+        const response = await fetch(`/api/like/${postId}`, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // 좋아요 상태 업데이트
+          if (data.liked) {
+            likeBtn.classList.add('liked');
+            likeBtn.textContent = '❤️';
+          } else {
+            likeBtn.classList.remove('liked');
+            likeBtn.textContent = '🤍';
+          }
+          
+          // 좋아요 수 업데이트
+          if (data.like_count > 0) {
+            if (likeCountEl) {
+              likeCountEl.textContent = `${data.like_count}명이 좋아합니다`;
+            } else {
+              const actionsDiv = likeBtn.closest('.post-actions');
+              const newLikeCount = document.createElement('div');
+              newLikeCount.className = 'like-count';
+              newLikeCount.textContent = `${data.like_count}명이 좋아합니다`;
+              actionsDiv.parentNode.insertBefore(newLikeCount, actionsDiv.nextSibling);
+            }
+          } else {
+            if (likeCountEl) {
+              likeCountEl.remove();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('좋아요 처리 중 오류:', error);
+        alert('좋아요 처리 중 오류가 발생했습니다.');
+      }
+    }
+
+    async function addComment(event, postId) {
+      event.preventDefault();
+      
+      const input = document.getElementById(`comment-input-${postId}`);
+      const content = input.value.trim();
+      const submitBtn = event.target.querySelector('.comment-submit');
+      
+      if (!content) return;
+      
+      submitBtn.disabled = true;
+      
+      try {
+        const response = await fetch(`/api/comment/${postId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ content: content })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // 댓글 추가
+          const commentsSection = document.getElementById(`comments-${postId}`);
+          const newComment = document.createElement('div');
+          newComment.className = 'comment';
+          newComment.innerHTML = `
+            <span class="username">${data.comment.username}</span>
+            <span class="content">${data.comment.content}</span>
+          `;
+          commentsSection.appendChild(newComment);
+          
+          // 입력 필드 초기화
+          input.value = '';
+        } else {
+          alert(data.message || '댓글 추가에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('댓글 추가 중 오류:', error);
+        alert('댓글 추가 중 오류가 발생했습니다.');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    function focusCommentInput(postId) {
+      const input = document.getElementById(`comment-input-${postId}`);
+      if (input) {
+        input.focus();
+      }
+    }
+  </script>
+</body>
+</html>
+
