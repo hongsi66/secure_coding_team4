@@ -309,6 +309,52 @@ def add_comment(post_id):
         }
     })
 
+@app.route('/api/post/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    """게시물 삭제"""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "message": "로그인이 필요합니다."}), 401
+    
+    user_id = session['user_id']
+    conn = get_db()
+    
+    # 게시물이 존재하는지 및 현재 사용자의 게시물인지 확인
+    post = conn.execute(
+        "SELECT * FROM posts WHERE id=? AND user_id=?", (post_id, user_id)
+    ).fetchone()
+    
+    if not post:
+        conn.close()
+        return jsonify({"success": False, "message": "게시물을 찾을 수 없거나 삭제 권한이 없습니다."}), 403
+    
+    try:
+        # 관련 좋아요 삭제
+        conn.execute("DELETE FROM likes WHERE post_id=?", (post_id,))
+        
+        # 관련 댓글 삭제
+        conn.execute("DELETE FROM comments WHERE post_id=?", (post_id,))
+        
+        # 게시물 삭제
+        conn.execute("DELETE FROM posts WHERE id=?", (post_id,))
+        conn.commit()
+        
+        # 업로드된 이미지 파일 삭제
+        image_path = post['image_path']
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], image_path)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(f"파일 삭제 중 오류: {e}")
+        
+        conn.close()
+        return jsonify({"success": True, "message": "게시물이 삭제되었습니다."})
+    
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({"success": False, "message": f"게시물 삭제 중 오류가 발생했습니다: {str(e)}"}), 500
+
 if __name__ == "__main__":
     # 데이터베이스 초기화 (처음 실행 시)
     if not os.path.exists(DB):

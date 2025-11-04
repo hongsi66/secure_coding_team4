@@ -68,8 +68,14 @@
     .post-header {
       padding: 14px 16px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #efefef;
+    }
+
+    .post-header-left {
+      display: flex;
+      align-items: center;
     }
 
     .post-username {
@@ -77,6 +83,22 @@
       font-size: 14px;
       color: #262626;
       margin-left: 10px;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ed4956;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .delete-btn:hover {
+      background-color: #fafafa;
     }
 
     .post-image {
@@ -246,9 +268,14 @@
   <div class="container">
     {% if posts %}
       {% for post in posts %}
-      <div class="post">
+      <div class="post" id="post-{{ post.id }}">
         <div class="post-header">
-          <div class="post-username">{{ post.username }}</div>
+          <div class="post-header-left">
+            <div class="post-username">{{ post.username }}</div>
+          </div>
+          {% if post.user_id == user_id %}
+          <button class="delete-btn" onclick="deletePost({{ post.id }})">삭제</button>
+          {% endif %}
         </div>
         <img src="{{ url_for('uploaded_file', filename=post.image_path) }}" alt="Post image" class="post-image">
         <div class="post-content">
@@ -403,6 +430,53 @@
       const input = document.getElementById(`comment-input-${postId}`);
       if (input) {
         input.focus();
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('정말 이 게시물을 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/post/${postId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // 게시물 요소 제거
+          const postElement = document.getElementById(`post-${postId}`);
+          if (postElement) {
+            postElement.style.transition = 'opacity 0.3s';
+            postElement.style.opacity = '0';
+            setTimeout(() => {
+              postElement.remove();
+              
+              // 게시물이 없으면 빈 상태 메시지 표시
+              const container = document.querySelector('.container');
+              const posts = container.querySelectorAll('.post');
+              if (posts.length === 0) {
+                container.innerHTML = `
+                  <div class="empty-state">
+                    <h2>아직 게시물이 없습니다</h2>
+                    <p>첫 번째 게시물을 업로드해보세요!</p>
+                    <a href="/upload" class="upload-btn">게시물 업로드</a>
+                  </div>
+                `;
+              }
+            }, 300);
+          }
+        } else {
+          alert(data.message || '게시물 삭제에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('게시물 삭제 중 오류:', error);
+        alert('게시물 삭제 중 오류가 발생했습니다.');
       }
     }
   </script>
